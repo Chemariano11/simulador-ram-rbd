@@ -253,7 +253,7 @@ tfoot td{border-top:2px solid var(--line-2);background:var(--surface-2)}
   <section id="tab-sens" class="page" hidden></section>
   <section id="tab-dados" class="page" hidden></section>
   <section id="tab-guia" class="page" hidden></section>
-  <footer class="credits"><span><strong>Simulador RAM-RBD</strong> · versão 2.6 · Instituto Weibull</span><span>Tutoria: Prof. Carlos Henrique Mariano · Criação assistida pela LLM Claude – Cowork (modelo claude-opus-5-5)</span></footer>
+  <footer class="credits"><span><strong>Simulador RAM-RBD</strong> · versão 2.6.2 · Instituto Weibull</span><span>Tutoria: Prof. Carlos Henrique Mariano · Criação assistida pela LLM Claude – Cowork (modelo claude-opus-5-5)</span></footer>
 </main>
 <div id="dlgRoot"></div>
 <div id="toastRoot"></div>
@@ -1354,7 +1354,7 @@ function renderCutPanel() {
   panel.append(h("div", { class: "sec-h" }, h("h3", null, "Análise por conjuntos mínimos de corte"),
     h("span", { class: "hint" }, "Billinton & Allan (1992), cap. 5 e seção 11.5")));
   panel.append(h("p", { class: "lead", style: "margin-bottom:10px" },
-    "Os cortes mínimos são deduzidos automaticamente da estrutura acima. Cada corte é um modo de falha do sistema: seus componentes ficam em paralelo e os cortes, em série. Os índices usam as equações aproximadas de Billinton & Allan, com λ = 1/MTTF e r = MTTR (+ mobilização) de cada componente."));
+    "Os cortes mínimos são deduzidos automaticamente da estrutura acima. Cada corte mínimo é uma combinação de falhas de componentes que, sozinha, faz o sistema falhar (Billinton & Allan a chamam de modo de falha do sistema; não confundir com o modo de falha de um componente, da FMEA e do RCM): seus componentes ficam em paralelo e os cortes, em série. Os índices usam as equações aproximadas de Billinton & Allan, com λ = 1/MTTF e r = MTTR (+ mobilização) de cada componente."));
   let an; const em = engineModel();
   try { an = E.cutSetAnalysis(em, cutMaxOrder); }
   catch (e) { panel.append(h("div", { class: "banner warn" }, "Não foi possível deduzir os cortes: " + e.message)); box.append(panel); return; }
@@ -2054,7 +2054,7 @@ function renderGuide() {
   const g = h("div", { class: "guide" });
   g.append(h("div", { class: "panel" }, h("h3", null, "Primeiro modelo em seis passos"), h("ol", { style: "margin:6px 0 0;padding-left:20px" },
     h("li", null, h("strong", null, "Escolha o ponto de partida. "), "No seletor Modelo, abra um exemplo parecido com o seu caso ou crie um Novo modelo. Dê um nome ao modelo na aba Estrutura."),
-    h("li", null, h("strong", null, "Monte a lógica de sucesso. "), "Na aba Estrutura, combine grupos (série, paralelo, k-de-n, reserva em espera, carga compartilhada) e componentes. Comece pelo critério de sucesso do sistema, não pelo desenho físico. Para redes que não são série-paralelo, como a ponte, use conjuntos mínimos de corte."),
+    h("li", null, h("strong", null, "Monte a lógica de sucesso. "), "Na aba Estrutura, combine grupos (série, paralelo, k-de-n, reserva em espera, carga compartilhada) e componentes. Comece pelo critério de sucesso do sistema, não pelo desenho físico: o CCM da estação de bombeamento alimenta fisicamente os dois motores, mas, como os dois trens dependem dele, entra em série. Para redes que não são série-paralelo, como a ponte, use conjuntos mínimos de corte."),
     h("li", null, h("strong", null, "Descreva cada componente. "), "Na aba Componentes, informe a distribuição do tempo até a falha. Marque Reparável só se o componente for reparado; sem reparo, a primeira falha é definitiva. Componentes com contorno tracejado ainda usam os parâmetros iniciais."),
     h("li", null, h("strong", null, "Acrescente manutenção e logística, se houver. "), "Equipes, estoques de peças, causa comum e custos ficam na aba Manutenção e logística. Para confiabilidade de missão, deixe-a como está."),
     h("li", null, h("strong", null, "Simule. "), "Na aba Simular, ajuste o horizonte e o número de replicações. Para a confiabilidade num instante t, use horizonte = t e leia o indicador Confiabilidade no horizonte; para disponibilidade, use um horizonte longo e leia a Disponibilidade média com o IC 95 %."),
@@ -2067,6 +2067,23 @@ function renderGuide() {
     h("li", null, "Probabilidades de falha muito pequenas (abaixo de 10⁻⁴) exigem milhões de replicações; nesses casos use a solução analítica."),
     h("li", null, "Para carregar um modelo de exercício, cole o JSON em Modelo em JSON e clique em Carregar este modelo."))));
   pg.append(g);
+  // exemplos das aulas (versão 2.6.2)
+  pg.append(h("div", null, h("h2", { style: "margin-top:6px" }, "Exemplos das aulas: a estação de bombeamento"), h("p", { class: "lead", style: "margin-top:4px" },
+    "Os dois exemplos v2.6 da estação acompanham o fio condutor dos livros M1 a M5. Os grupos do simulador não têm nome: use a correspondência abaixo para ler a aba Estrutura.")));
+  pg.append(h("div", { class: "guide", style: "grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))" },
+    h("div", { class: "panel" }, h("h3", null, "Como ler a estrutura"),
+      h("ul", null,
+        h("li", null, h("strong", null, "Blocos em série: "), "cada um é um subsistema – Filtro (filtragem), CCM (alimentação e comando) e Válvula reguladora (regulação)."),
+        h("li", null, h("strong", null, "Grupo paralelo: "), "cada ramo é um trem – motor, bomba e válvula de retenção em série."),
+        h("li", null, h("strong", null, "Critério de sucesso: "), "filtro, CCM e válvula reguladora funcionando e pelo menos um trem funcionando."),
+        h("li", null, "Para testar outro requisito, troque o grupo paralelo por k-de-n com k = 2: é o caso em que cada trem entrega só 60 % da vazão mínima e os dois são necessários.")),
+      h("p", { class: "hint" }, "Confira: missão sem reparo – R(1 ano) = 0,9240 e R(3 anos) ≈ 0,48; com k = 2, R(1 ano) = 0,7046 (valores analíticos; a simulação pode diferir na terceira casa)."),
+      h("div", { class: "row", style: "margin-top:8px" }, loadEx("aula_missao", "Abrir a missão de 1 ano"), loadEx("aula_reparavel", "Abrir a estação reparável"))),
+    h("div", { class: "panel" }, h("h3", null, "O modelo 3D e uma hipótese dos exemplos"),
+      h("p", null, "O modelo 3D mostra a mesma estação com fronteira, subsistemas, fluxos de água, energia e torque e o diagrama de blocos sincronizado com as falhas: ",
+        h("a", { href: "https://chemariano11.github.io/estacao-3d/", target: "_blank", rel: "noopener" }, "chemariano11.github.io/estacao-3d"), "."),
+      h("p", null, "Os exemplos supõem que a válvula de retenção só falha fechada (o trem para). Travada aberta, ela deixa a água do outro trem voltar quando o seu trem para: {M1, V1 aberta} é um corte de 2.ª ordem que o série-paralelo não representa, e 0,9240 fica ligeiramente otimista."),
+      h("p", { class: "hint" }, "Para incluir esse modo, veja a última premissa do modelo, mais abaixo: um componente por modo de falha e conjuntos mínimos de corte."))));
   // novidades da versão 2.6
   pg.append(h("div", null, h("h2", { style: "margin-top:6px" }, "Recurso novo da versão 2.6: dados de campo"), h("p", { class: "lead", style: "margin-top:4px" },
     "A aba Dados de campo analisa tempos de falha reais de sistemas reparáveis, sem simulação: substitui as planilhas de Crow-AMSAA usadas nas turmas anteriores.")));
@@ -2170,7 +2187,8 @@ function renderGuide() {
     h("li", null, "Ao retornar do reparo, o ramo principal volta a operar e a reserva volta a esperar (comutação de retorno perfeita)."),
     h("li", null, "A preventiva retira o componente de serviço no disparo. A ação preditiva o mantém operando até haver equipe e peça; se ele falhar antes, a ordem vira corretiva."),
     h("li", null, "O choque de causa comum é exponencial, como na definição do fator β em taxas."),
-    h("li", null, "Reposição de peças um-para-um (S − 1, S): cada consumo gera um pedido."))));
+    h("li", null, "Reposição de peças um-para-um (S − 1, S): cada consumo gera um pedido."),
+    h("li", null, "Cada componente tem um único modo de falha. Se um item falha de dois jeitos com consequências diferentes (por exemplo, válvula de retenção travada fechada, que para o trem, ou travada aberta, que deixa a água voltar pelo trem parado), represente cada modo como um componente separado e descreva o sistema por conjuntos mínimos de corte."))));
   g2.append(h("div", { class: "panel" }, h("h3", null, "Indicadores"), h("ul", null,
     h("li", null, h("strong", null, "Disponibilidade média: "), "fração do horizonte com o sistema no nível exigido (limiar escolhido na aba Simular)."),
     h("li", null, h("strong", null, "Disponibilidade equivalente: "), "média do desempenho, que conta a capacidade reduzida dos estados degradados."),
